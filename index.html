@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>File Encryptor</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f6ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .upload-container {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      width: 350px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .upload-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .drop-area {
+      border: 2px dashed #a0c4ff;
+      padding: 30px;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #888;
+      margin-bottom: 20px;
+    }
+
+    .drop-area:hover {
+      background-color: #f1f9ff;
+    }
+
+    .file-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      background: #f6f9ff;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .file-type {
+      width: 30px;
+      height: 30px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 30px;
+      border-radius: 5px;
+      margin-right: 10px;
+      color: white;
+    }
+
+    .file-info {
+      flex-grow: 1;
+      margin-left: 10px;
+    }
+
+    .file-remove {
+      cursor: pointer;
+      color: #999;
+      font-weight: bold;
+    }
+
+    .PDF { background-color: #e64980; }
+    .PNG { background-color: #4dabf7; }
+    .JPG, .JPEG { background-color: #adb5bd; }
+    .CSS { background-color: #fab005; }
+    .JSON { background-color: #868e96; }
+    .DEFAULT { background-color: #dee2e6; }
+  </style>
+</head>
+<body>
+
+  <div class="upload-container">
+    <div class="upload-title">File Encryptor</div>
+    <div class="drop-area" id="dropArea">
+      <p>Drag & Drop your files here or <span style="color: #339af0; text-decoration: underline; cursor: pointer;" id="fileTrigger">Click</span> to browse files</p>
+      <input type="file" id="fileInput" multiple hidden>
+    </div>
+    <ul class="file-list" id="fileList"></ul>
+  </div>
+
+  <script>
+  function formatBytes(bytes) {
+    return bytes < 1024 ? bytes + 'B' : (bytes / 1024).toFixed(1) + 'KB';
+  }
+
+  function getFileExtension(fileName) {
+    return fileName.split('.').pop().toUpperCase();
+  }
+
+  function getFileTypeClass(ext) {
+    return ['PDF', 'PNG', 'JPG', 'JPEG', 'CSS', 'JSON'].includes(ext) ? ext : 'DEFAULT';
+  }
+
+  function createFileItem(file) {
+    const ext = getFileExtension(file.name);
+    const typeClass = getFileTypeClass(ext);
+
+    return $(`
+      <li class="file-item">
+        <div class="file-type ${typeClass}">${ext}</div>
+        <div class="file-info">
+          <div>${file.name}</div>
+          <div style="font-size: 12px; color: #777;">${formatBytes(file.size)}</div>
+        </div>
+        <div class="file-remove">×</div>
+      </li>
+    `);
+  }
+
+  $(document).ready(function () {
+    const fileList = $('#fileList');
+    const fileInput = $('#fileInput');
+    const dropArea = $('#dropArea');
+
+    // Existing click event for the "Click" text
+    $('#fileTrigger').on('click', function (e) {
+      e.stopPropagation(); // Prevent the click from bubbling to dropArea
+      fileInput.click();
+    });
+
+    // Add click event for the entire drop-area
+    dropArea.on('click', function (e) {
+      // Only trigger fileInput.click() if the click target is the dropArea itself
+      if (e.target === this) {
+        fileInput.click();
+      }
+    });
+
+    fileInput.on('change', function (e) {
+      handleFiles(e.target.files);
+    });
+
+    dropArea.on('dragover', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropArea.css('background-color', '#e3f2fd');
+    });
+
+    dropArea.on('dragleave', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropArea.css('background-color', 'white');
+    });
+
+    dropArea.on('drop', function (e) {
+      e.preventDefault();
+      dropArea.css('background-color', 'white');
+      const files = e.originalEvent.dataTransfer.files;
+      handleFiles(files);
+    });
+
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        const item = createFileItem(file);
+        fileList.append(item);
+      });
+    }
+
+    fileList.on('click', '.file-remove', function () {
+      $(this).closest('.file-item').remove();
+    });
+  });
+</script>
+</body>
+</html>
